@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 import joblib
 
-
 def fetch_movie_id(movie_title):
     response = requests.get("https://api.themoviedb.org/3/search/movie?api_key=2eec5cadfef931cf08e9b0805fe12e88&query={}".format(movie_title))
     data = response.json()
@@ -24,38 +23,50 @@ def fetch_poster(movie_id):
         return "https://via.placeholder.com/185x278"  # Use a default image URL
 
 def recommend(movie):
-    if not movie:
+    try:
+        if not movie:
+            return []
+        if movie not in movies_lists:
+            return []
+        movie_index = movies_lists.tolist().index(movie)
+        distance = similarity[movie_index]
+        movie_list = sorted(list(enumerate(similarity[movie_index])), reverse=True, key=lambda x:x[1])[1:6]
+        recommended_movies = [movies_lists[i[0]] for i in movie_list]
+        recommended_movies_poster = []
+        for movie in recommended_movies:
+            movie_id = fetch_movie_id(movie)
+            if movie_id:
+                poster = fetch_poster(movie_id)
+                print(movie_id)  # Add this line to print the movie ID
+                recommended_movies_poster.append(poster)
+            else:
+                recommended_movies_poster.append("https://via.placeholder.com/185x278")  # Use a default image URL
+        return recommended_movies, recommended_movies_poster
+    except Exception as e:
+        print(f"Error: {e}")
         return []
-    if movie not in movies_lists:
-        return []
-    movie_index = movies_lists.tolist().index(movie)
-    distance = similarity[movie_index]
-    movie_list = sorted(list(enumerate(similarity[movie_index])), reverse=True, key=lambda x:x[1])[1:6]
-    recommended_movies = [movies_lists[i[0]] for i in movie_list]
-    recommended_movies_poster = []
-    for movie in recommended_movies:
-        movie_id = fetch_movie_id(movie)
-        if movie_id:
-            poster = fetch_poster(movie_id)
-            print(movie_id)  # Add this line to print the movie ID
-            recommended_movies_poster.append(poster)
-        else:
-            recommended_movies_poster.append("https://via.placeholder.com/185x278")  # Use a default image URL
-    return recommended_movies, recommended_movies_poster
 
-movies_lists = pickle.load(open('movies.pkl','rb'))
-movies_lists = movies_lists["title"].values
-similarity = joblib.load('similarity (1).pkl')
+try:
+    movies_lists = pickle.load(open('movies.pkl','rb'))
+    movies_lists = movies_lists["title"].values
+    similarity = joblib.load('similarity.pkl')
+except FileNotFoundError:
+    print("Error: movies.pkl or similarity.pkl file not found.")
+    st.error("Error: movies.pkl or similarity.pkl file not found.")
+    st.stop()
 
 st.title('Movie Recommender System')
 Selected_Movie_Name   = st.selectbox('How would you like to be connected ?', movies_lists)
 
 if st.button('Recommend'):
     names, poster = recommend(Selected_Movie_Name)
-    row = st.container()
-    with row:
-        cols = st.columns(5)
-        for i in range(5):
-            with cols[i]:
-                st.write(f"<h5 style='text-align: center; width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>{names[i]}</h5>", unsafe_allow_html=True)
-                st.image(poster[i])
+    if names:
+        row = st.container()
+        with row:
+            cols = st.columns(5)
+            for i in range(5):
+                with cols[i]:
+                    st.write(f"<h5 style='text-align: center; width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>{names[i]}</h5>", unsafe_allow_html=True)
+                    st.image(poster[i])
+    else:
+        st.error("No recommended movies found.")
