@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import pandas as pd
 import requests
+import h5py
 
 def fetch_movie_id(movie_title):
     response = requests.get("https://api.themoviedb.org/3/search/movie?api_key=2eec5cadfef931cf08e9b0805fe12e88&query={}".format(movie_title))
@@ -41,10 +42,16 @@ def recommend(movie):
             recommended_movies_poster.append("https://via.placeholder.com/185x278")  # Use a default image URL
     return recommended_movies, recommended_movies_poster
 
-movies_lists = pickle.load(open('movies.pkl','rb'))
-movies_lists = movies_lists["title"].values
-with h5py.File('similarity.h5', 'r') as f:
-    similarity = f['similarity'][:]
+try:
+    movies_lists = pickle.load(open('movies.pkl','rb'))
+    movies_lists = movies_lists["title"].values
+    with h5py.File('similarity.h5', 'r') as f:
+        similarity = f['similarity'][:]
+except FileNotFoundError:
+    print("Error: movies.pkl or similarity.h5 file not found.")
+    st.error("Error: movies.pkl or similarity.h5 file not found.")
+    st.stop()
+
 st.title('Movie Recommender System')
 Selected_Movie_Name   = st.selectbox('How would you like to be connected ?', movies_lists)
 
