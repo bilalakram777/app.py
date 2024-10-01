@@ -2,6 +2,8 @@ import streamlit as st
 import pickle
 import pandas as pd
 import requests
+import joblib
+
 
 def fetch_movie_id(movie_title):
     response = requests.get("https://api.themoviedb.org/3/search/movie?api_key=2eec5cadfef931cf08e9b0805fe12e88&query={}".format(movie_title))
