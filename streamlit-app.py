@@ -4,7 +4,6 @@ try:
     import pickle
     import pandas as pd
     import requests
-    import h5py
     import joblib
 except ModuleNotFoundError as e:
     print(f"Error: {e}")
