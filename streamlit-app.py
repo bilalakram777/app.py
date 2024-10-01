@@ -50,7 +50,7 @@ def recommend(movie):
 
 movies_lists = pickle.load(open('movies.pkl','rb'))
 movies_lists = movies_lists["title"].values
-similarity = pickle.load(open('similarity (1).pkl','rb'))
+similarity = joblib.load('similarity (1).pkl')
 
 st.title('Movie Recommender System')
 Selected_Movie_Name   = st.selectbox('How would you like to be connected ?', movies_lists)
